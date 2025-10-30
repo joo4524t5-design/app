@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTP.ie</title>
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --secondary-color: #333;
+            --accent-color: #8b0000;
+            --text-color: #f0f0f0;
+            --search-bg: rgba(0, 0, 0, 0.7);
+            --mouse-speed: 1;
+            --search-speed: 1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('https://images.pexels.com/photos/14370848/pexels-photo-14370848.jpeg?_gl=1*byok79*_ga*MTAwNTY0MTY3Ni4xNzYxNTkwMjg3*_ga_8JE65Q40S6*czE3NjE1OTAyODYkbzEkZzEkdDE3NjE1OTA4ODIkajE4JGwwJGgw') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+            transition: all 0.5s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="%238b0000" opacity="0.7"/></svg>') 12 12, auto;
+        }
+
+        /* نافذة طلب وضع ملء الشاشة */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .fullscreen-message {
+            background: rgba(139, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .fullscreen-message h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .fullscreen-message p {
+            color: #f0f0f0;
+            margin-bottom: 30px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .fullscreen-btn {
+            background: linear-gradient(45deg, #ff0000, #8b0000);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
+        }
+
+        .warning-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* إخفاء المحتوى الرئيسي حتى يتم تفعيل وضع ملء الشاشة */
+        .main-content-hidden {
+            display: none !important;
+        }
+
+        /* أنماط شريط الأدوات العلوي */
+        .top-bar {
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-shadow: 0 0 15px rgba(139, 0, 0, 0.8);
+            font-family: 'Arial', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .top-search {
+            flex-grow: 1;
+            margin: 0 25px;
+            position: relative;
+        }
+
+        .top-search input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid #555;
+            background-color: rgba(10, 10, 10, 0.8);
+            color: var(--text-color);
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .top-search input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+
+        .toolbar-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .toolbar-buttons button {
+            background: rgba(50, 50, 50, 0.7);
+            border: 1px solid #555;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .toolbar-buttons button:hover {
+            background-color: rgba(139, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        .toolbar-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* شريط معلومات الأمان */
+        .security-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #555;
+        }
+
+        .security-level {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .security-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #00ff00;
+            box-shadow: 0 0 8px #00ff00;
+        }
+
+        .security-indicator.medium {
+            background-color: #ffff00;
+            box-shadow: 0 0 8px #ffff00;
+        }
+
+        .security-indicator.low {
+            background-color: #ff0000;
+            box-shadow: 0 0 8px #ff0000;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            background: rgba(139, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .random-code {
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* أنماط محتوى الصفحة الرئيسية */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 70px);
+            padding: 30px;
+            position: relative;
+        }
+
+        .search-container {
+            margin-top: auto;
+            margin-bottom: 120px;
+            margin-right: 60px;
+            max-width: 700px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 18px 25px;
+            border-radius: 35px;
+            border: 2px solid var(--accent-color);
+            background-color: var(--search-bg);
+            color: var(--text-color);
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            box-shadow: 0 0 25px rgba(139, 0, 0, 0.8);
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.95);
+            border-radius: 0 0 15px 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            border: 1px solid #444;
+            border-top: none;
+        }
+
+        .search-suggestion {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            transition: background-color 0.2s;
+        }
+
+        .search-suggestion:hover {
+            background-color: rgba(139, 0, 0, 0.3);
+        }
+
+        .search-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        /* أنماط نتائج البحث */
+        .search-results {
+            display: none;
+            margin-top: 25px;
+            max-width: 850px;
+        }
+
+        .search-result {
+            background-color: rgba(0, 0, 0, 0.75);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .search-result:hover {
+            transform: translateX(-8px);
+            background-color: rgba(0, 0, 0, 0.85);
+            border-color: var(--accent-color);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            margin-left: 20px;
+            background: linear-gradient(135deg, #8b0000, #500000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .result-details {
+            flex-grow: 1;
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+
+        .result-description {
+            font-size: 15px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        /* أنماط نافذة المتصفح الداخلية */
+        .browser-window {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-color);
+            z-index: 2000;
+        }
+
+        .browser-header {
+            background-color: var(--secondary-color);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #555;
+        }
+
+        .browser-url {
+            flex-grow: 1;
+            margin: 0 20px;
+            padding: 8px 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            font-size: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .browser-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .browser-actions button {
+            background: rgba(70, 70, 70, 0.7);
+            border: 1px solid #666;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .browser-actions button:hover {
+            background-color: rgba(139, 0, 0, 0.3);
+        }
+
+        .browser-content {
+            width: 100%;
+            height: calc(100% - 55px);
+            border: none;
+        }
+
+        /* أنماط إعدادات الأمان */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .settings-content {
+            background-color: var(--secondary-color);
+            padding: 35px;
+            border-radius: 15px;
+            width: 450px;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--accent-color);
+        }
+
+        .settings-title {
+            font-size: 24px;
+            margin-bottom: 25px;
+            text-align: center;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+
+        .security-option {
+            padding: 18px;
+            margin-bottom: 15px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .security-option:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .security-option.active {
+            border-color: var(--accent-color);
+            background-color: rgba(139, 0, 0, 0.2);
+        }
+
+        .security-option strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .security-option p {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .close-settings {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .close-settings button {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .close-settings button:hover {
+            background: #a00;
+            transform: scale(1.05);
+        }
+
+        /* أنماط مختلفة لمستويات الأمان */
+        body.safety-low {
+            --primary-color: #ffffff;
+            --secondary-color: #f0f0f0;
+            --text-color: #333333;
+            --search-bg: rgba(255, 255, 255, 0.9);
+            --mouse-speed: 0.5;
+            --search-speed: 0.3;
+            background: url('file:///F:/%D8%B3%D8%B1%D9%8A/New%20folder/photos/pexels-eberhardgross-1287145.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body.safety-medium {
+            --primary-color: #606060;
+            --secondary-color: #808080;
+            --text-color: #f0f0f0;
+            --search-bg: rgba(96, 96, 96, 0.8);
+            --mouse-speed: 0.8;
+            --search-speed: 0.6;
+            background: url('file:///F:/%D8%B3%D8%B1%D9%8A/New%20folder/photos/pexels-maxfrancis-2246476.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body.safety-high {
+            --primary-color: #000000;
+            --secondary-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --search-bg: rgba(0, 0, 0, 0.8);
+            --mouse-speed: 1;
+            --search-speed: 1;
+            background: url('https://images.pexels.com/photos/14370848/pexels-photo-14370848.jpeg?_gl=1*byok79*_ga*MTAwNTY0MTY3Ni4xNzYxNTkwMjg3*_ga_8JE65Q40S6*czE3NjE1OTAyODYkbzEkZzEkdDE3NjE1OTA4ODIkajE4JGwwJGgw') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* شريط التمرير المخصص */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a00;
+        }
+
+        /* تأثيرات إضافية */
+        .phantom-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            background: radial-gradient(circle at center, var(--accent-color) 0%, transparent 70%);
+            animation: phantomPulse 8s infinite alternate;
+        }
+
+        @keyframes phantomPulse {
+            0% { opacity: 0.03; }
+            100% { opacity: 0.08; }
+        }
+
+        /* نافذة حماية */
+        .protection-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .protection-message {
+            background: rgba(139, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .protection-message h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .protection-message p {
+            color: #f0f0f0;
+            margin-bottom: 30px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .protection-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        /* تصميم متجاوب */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+            }
+            
+            .logo {
+                font-size: 22px;
+                margin-bottom: 10px;
+            }
+            
+            .top-search {
+                margin: 10px 0;
+                order: 3;
+                width: 100%;
+            }
+            
+            .security-info {
+                order: 2;
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .search-container {
+                margin-right: 20px;
+                margin-bottom: 80px;
+            }
+            
+            .search-box input {
+                padding: 15px 20px;
+                font-size: 16px;
+            }
+
+            .fullscreen-message {
+                padding: 20px;
+                margin: 15px;
+            }
+
+            .fullscreen-message h2 {
+                font-size: 22px;
+            }
+
+            .fullscreen-message p {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body class="safety-high">
+    <!-- نافذة طلب وضع ملء الشاشة -->
+    <div class="fullscreen-overlay" id="fullscreen-overlay">
+        <div class="warning-icon">⚠️</div>
+        <div class="fullscreen-message">
+            <h2>مطلوب وضع ملء الشاشة</h2>
+            <p>للاستمرار في استخدام الموقع، يجب تفعيل وضع ملء الشاشة.<br>
+            هذا الشرط إلزامي ولا يمكن استخدام الموقع بدونه.</p>
+            <button class="fullscreen-btn" id="enable-fullscreen">
+                تفعيل وضع ملء الشاشة
+            </button>
+        </div>
+    </div>
+
+    <!-- نافذة الحماية -->
+    <div class="protection-overlay" id="protection-overlay">
+        <div class="protection-icon">🔒</div>
+        <div class="protection-message">
+            <h2>عذراً، هذه الخدمة محمية</h2>
+            <p>لا يمكنك الوصول إلى أدوات المطور أو فحص الأكواد.<br>
+            هذه الخدمة محمية ولا يمكنك التعي عليها.</p>
+            <button class="fullscreen-btn" id="close-protection">
+                موافق
+            </button>
+        </div>
+    </div>
+
+    <!-- تأثير الشبح الخفي -->
+    <div class="phantom-effect"></div>
+    
+    <!-- شريط الأدوات العلوي -->
+    <div class="top-bar main-content-hidden" id="main-content">
+        <div class="logo"> MTP.ie</div>
+        <div class="top-search">
+            <input type="text" id="top-search-input" placeholder="ابحث في الويب أو أدخل عنوان URL">
+        </div>
+        <div class="security-info">
+            <div class="security-level">
+                <div class="security-indicator" id="security-indicator"></div>
+                <span id="security-text">الأمان العالي</span>
+            </div>
+            <div class="location-info">
+                <span id="country-name">مصر</span>
+                <span class="random-code" id="random-code">89.4567</span>
+            </div>
+        </div>
+        <div class="toolbar-buttons">
+            <button id="back-btn">‹ الرجوع</button>
+            <button id="forward-btn">التقدم ›</button>
+            <button id="refresh-btn">⟳ تحديث</button>
+            <button id="settings-btn">الإعدادات</button>
+        </div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content main-content-hidden" id="main-content">
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="main-search-input" placeholder="ابحث...">
+                <div class="search-suggestions" id="search-suggestions"></div>
+            </div>
+            <div class="search-results" id="search-results"></div>
+        </div>
+    </div>
+
+    <!-- نافذة المتصفح الداخلية -->
+    <div class="browser-window" id="browser-window">
+        <div class="browser-header">
+            <button id="browser-back">‹ الرجوع</button>
+            <button id="browser-forward">التقدم ›</button>
+            <div class="browser-url" id="browser-url">about:blank</div>
+            <div class="browser-actions">
+                <button id="browser-refresh">⟳</button>
+                <button id="close-browser">✕ إغلاق</button>
+            </div>
+        </div>
+        <iframe class="browser-content" id="browser-content" src="about:blank"></iframe>
+    </div>
+
+    <!-- نافذة الإعدادات -->
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-content">
+            <div class="settings-title">إعدادات الأمان</div>
+            <div class="security-option active" data-level="high">
+                <strong>الأمان السوبر العالي</strong>
+                <p>أعلى مستوى حماية، تشفير كامل، لون أسود. مثالي للتصفح الآمن تماماً.</p>
+                <p>سرعة البحث: عالية | سرعة الماوس: طبيعية</p>
+            </div>
+            <div class="security-option" data-level="medium">
+                <strong>الأمان المتوسط</strong>
+                <p>حماية متوسطة، لون رصاصي. يوازن بين الأمان والأداء.</p>
+                <p>سرعة البحث: متوسطة | سرعة الماوس: متوسطة</p>
+            </div>
+            <div class="security-option" data-level="low">
+                <strong>الأمان البسيط</strong>
+                <p>حماية أساسية، لون أبيض. للأعمال اليومية البسيطة.</p>
+                <p>سرعة البحث: ضعيفة | سرعة الماوس: بطيئة</p>
+            </div>
+            <div class="close-settings">
+                <button id="close-settings-btn">إغلاق الإعدادات</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== إدارة وضع ملء الشاشة ==========
+        const fullscreenOverlay = document.getElementById('fullscreen-overlay');
+        const enableFullscreenBtn = document.getElementById('enable-fullscreen');
+        const mainContentElements = document.querySelectorAll('#main-content');
+
+        // التحقق من وضع ملء الشاشة الحالي
+        function isFullscreen() {
+            return !!(document.fullscreenElement || 
+                      document.webkitFullscreenElement || 
+                      document.msFullscreenElement);
+        }
+
+        // تفعيل وضع ملء الشاشة
+        function openFullscreen() {
+            const elem = document.documentElement;
+            
+            if (elem.requestFullscreen) {
+                return elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                return elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                return elem.msRequestFullscreen();
+            }
+        }
+
+        // الخروج من وضع ملء الشاشة
+        function closeFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+
+        // إظهار/إخفاء المحتوى الرئيسي بناءً على وضع الشاشة
+        function toggleMainContent() {
+            if (isFullscreen()) {
+                // إخفاء النافذة المنبثقة وإظهار المحتوى الرئيسي
+                fullscreenOverlay.style.display = 'none';
+                mainContentElements.forEach(element => {
+                    element.classList.remove('main-content-hidden');
+                });
+            } else {
+                // إظهار النافذة المنبثقة وإخفاء المحتوى الرئيسي
+                fullscreenOverlay.style.display = 'flex';
+                mainContentElements.forEach(element => {
+                    element.classList.add('main-content-hidden');
+                });
+            }
+        }
+
+        // حدث تفعيل وضع ملء الشاشة
+        enableFullscreenBtn.addEventListener('click', function() {
+            openFullscreen().then(() => {
+                toggleMainContent();
+            }).catch(err => {
+                console.log('خطأ في تفعيل وضع ملء الشاشة:', err);
+                alert('فشل في تفعيل وضع ملء الشاشة. يرجى المحاولة مرة أخرى.');
+            });
+        });
+
+        // الاستماع لتغييرات وضع الشاشة
+        document.addEventListener('fullscreenchange', toggleMainContent);
+        document.addEventListener('webkitfullscreenchange', toggleMainContent);
+        document.addEventListener('msfullscreenchange', toggleMainContent);
+
+        // منع الخروج من وضع ملء الشاشة باستخدام ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isFullscreen()) {
+                e.preventDefault();
+                alert('لا يمكنك الخروج من وضع ملء الشاشة. هذا الشرط إلزامي لاستخدام الموقع.');
+            }
+        });
+
+        // التحقق الأولي من وضع الشاشة
+        window.addEventListener('load', function() {
+            toggleMainContent();
+            
+            // إذا كان المستخدم بالفعل في وضع ملء الشاشة، إخفاء النافذة المنبثقة
+            if (isFullscreen()) {
+                toggleMainContent();
+            }
+        });
+
+        // ========== الحماية من فحص الأكواد ==========
+        const protectionOverlay = document.getElementById('protection-overlay');
+        const closeProtectionBtn = document.getElementById('close-protection');
+
+        // منع النقر بزر الماوس الأيمن
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            showProtectionOverlay();
+        });
+
+        // منع فتح أدوات المطور (F12, Ctrl+Shift+I, etc.)
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.keyCode === 123) {
+                e.preventDefault();
+                showProtectionOverlay();
+                return false;
+            }
+            
+            // Ctrl+Shift+I
+            if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+                e.preventDefault();
+                showProtectionOverlay();
+                return false;
+            }
+            
+            // Ctrl+Shift+J
+            if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+                e.preventDefault();
+                showProtectionOverlay();
+                return false;
+            }
+            
+            // Ctrl+U
+            if (e.ctrlKey && e.keyCode === 85) {
+                e.preventDefault();
+                showProtectionOverlay();
+                return false;
+            }
+        });
+
+        // إظهار نافذة الحماية
+        function showProtectionOverlay() {
+            protectionOverlay.style.display = 'flex';
+        }
+
+        // إغلاق نافذة الحماية
+        closeProtectionBtn.addEventListener('click', function() {
+            protectionOverlay.style.display = 'none';
+        });
+
+        // ========== إدارة معلومات الأمان والموقع ==========
+        const securityIndicator = document.getElementById('security-indicator');
+        const securityText = document.getElementById('security-text');
+        const countryName = document.getElementById('country-name');
+        const randomCode = document.getElementById('random-code');
+
+        // قائمة دول عالمية
+        const countries = [
+            // دول عربية
+            "مصر", "السعودية", "الجزائر", "العراق", "المغرب", "اليمن", "سوريا", 
+            "تونس", "الإمارات", "ليبيا", "الأردن", "لبنان", "عمان", "الكويت", 
+            "قطر", "البحرين", "موريتانيا", "الصومال", "جيبوتي", "جزر القمر", "فلسطين",
+            
+            // دول أوروبية
+            "ألمانيا", "فرنسا", "إيطاليا", "إسبانيا", "بريطانيا", "هولندا", "بلجيكا",
+            "السويد", "النرويج", "فنلندا", "الدنمارك", "سويسرا", "النمسا", "اليونان",
+            "البرتغال", "بولندا", "أيرلندا", "التشيك", "المجر", "رومانيا",
+            
+            // دول آسيوية
+            "الصين", "اليابان", "الهند", "كوريا الجنوبية", "إندونيسيا", "ماليزيا",
+            "تايلاند", "فيتنام", "الفلبين", "سنغافورة", "باكستان", "بنغلاديش",
+            "سريلانكا", "نيبال", "ميانمار", "كمبوديا", "لاوس", "منغوليا",
+            
+            // دول أفريقية
+            "نيجيريا", "إثيوبيا", "كينيا", "غانا", "تنزانيا", "أوغندا", "أنغولا",
+            "موزمبيق", "زامبيا", "زيمبابوي", "مالي", "النيجر", "بوركينا فاسو",
+            "السنغال", "ساحل العاج", "الكاميرون", "مدغشقر", "بتسوانا", "ناميبيا",
+            
+            // دول أمريكية
+            "الولايات المتحدة", "كندا", "البرازيل", "المكسيك", "الأرجنتين", "كولومبيا",
+            "بيرو", "فنزويلا", "تشيلي", "الإكوادور", "غواتيمالا", "كوبا", "بوليفيا",
+            "جمهورية الدومينيكان", "هندوراس", "باراغواي", "السلفادور", "نيكاراغوا",
+            
+            // دول أوقيانوسيا
+            "أستراليا", "نيوزيلندا", "فيجي", "بابوا غينيا الجديدة", "جزر سليمان",
+            "فانواتو", "ساموا", "كيريباتي", "تونغا", "ميكرونيزيا"
+        ];
+
+        // إنشاء رمز عشوائي
+        function generateRandomCode() {
+            const part1 = Math.floor(1000 + Math.random() * 9000); // 4 أرقام
+            const part2 = Math.floor(100000 + Math.random() * 900000); // 6 أرقام
+            return `89.${part1}.${part2}`;
+        }
+
+        // اختيار دولة عشوائية
+        function getRandomCountry() {
+            const randomIndex = Math.floor(Math.random() * countries.length);
+            return countries[randomIndex];
+        }
+
+        // تحديث معلومات الأمان والموقع
+        function updateSecurityInfo(level) {
+            // تحديث المؤشر والنص
+            securityIndicator.className = 'security-indicator';
+            if (level === 'high') {
+                securityIndicator.classList.add('high');
+                securityText.textContent = 'الأمان العالي';
+            } else if (level === 'medium') {
+                securityIndicator.classList.add('medium');
+                securityText.textContent = 'الأمان المتوسط';
+            } else {
+                securityIndicator.classList.add('low');
+                securityText.textContent = 'الأمان البسيط';
+            }
+            
+            // تحديث الدولة والرمز العشوائي
+            countryName.textContent = getRandomCountry();
+            randomCode.textContent = generateRandomCode();
+        }
+
+        // تحديث عشوائي للمعلومات كل 30 ثانية
+        function startRandomUpdates() {
+            setInterval(() => {
+                if (currentSafetyLevel !== 'low') {
+                    updateSecurityInfo(currentSafetyLevel);
+                }
+            }, 30000); // تحديث كل 30 ثانية
+        }
+
+        // ========== إعدادات سرعة البحث والماوس ==========
+        function applySpeedSettings(level) {
+            let searchDelay, mouseSpeed;
+            
+            switch(level) {
+                case 'low':
+                    searchDelay = 1500; // تأخير كبير في البحث
+                    mouseSpeed = 0.5;   // سرعة بطيئة للماوس
+                    break;
+                case 'medium':
+                    searchDelay = 800;  // تأخير متوسط في البحث
+                    mouseSpeed = 0.8;   // سرعة متوسطة للماوس
+                    break;
+                case 'high':
+                default:
+                    searchDelay = 300;  // تأخير قليل في البحث
+                    mouseSpeed = 100000;     // سرعة طبيعية للماوس
+                    break;
+            }
+            
+            // تطبيق سرعة الماوس
+            document.documentElement.style.setProperty('--mouse-speed', mouseSpeed);
+            
+            // إرجاع تأخير البحث للاستخدام في وظائف البحث
+            return searchDelay;
+        }
+
+        // ========== عرض الموقع الحقيقي للمستخدم ==========
+        function showRealLocation() {
+            // هذا سيعرض موقع المستخدم الحقيقي فقط في وضع الأمان المنخفض
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // في تطبيق حقيقي، سنستخدم هذه الإحداثيات للحصول على اسم الدولة
+                        // ولكن هنا سنستخدمها فقط لتحديث اسم الدولة في الواجهة
+                        console.log("الموقع الحقيقي:", position.coords.latitude, position.coords.longitude);
+                        // في هذا المثال، سنستخدم مصر كموقع حقيقي
+                        countryName.textContent = "مصر (موقعك الحقيقي)";
+                    },
+                    function(error) {
+                        console.log("خطأ في الحصول على الموقع:", error);
+                        // إذا لم يتمكن من الحصول على الموقع الحقيقي، استخدم دولة عشوائية
+                        countryName.textContent = getRandomCountry();
+                    }
+                );
+            } else {
+                // إذا لم يكن الموقع الجغرافي مدعوماً، استخدم دولة عشوائية
+                countryName.textContent = getRandomCountry();
+            }
+        }
+
+        // ========== الكود الأصلي للمتصفح ==========
+        // قاعدة بيانات للمواقع والكلمات المشابهة
+        const sitesDatabase = [
+            // مواقع التواصل الاجتماعي
+            { name: "يوتيوب", url: "file:///F:/%D8%B3%D8%B1%D9%8A/New%20folder/youtub.html", description: "مشاهدة ومشاركة مقاطع الفيديو", image: "▶️" },
+            { name: "يوتريون", url: "file:///F:/%D8%B3%D8%B1%D9%8A/New%20folder/Utreon%20new%201.1.2%20.html", description: "شبكة فيديوهات اليوتيوب من مصر", image: "👥" },
+            { name: "تويتر", url: "https://www.twitter.com", description: "منصة التدوين المصغر والشبكات الاجتماعية", image: "🐦" },
+            { name: "انستغرام", url: "https://www.instagram.com", description: "مشاركة الصور والفيديوهات القصيرة", image: "📸" },
+            
+            // مواقع المعلومات والمعرفة
+            { name: "ويكيبيديا", url: "https://www.wikipedia.org", description: "الموسوعة الحرة والمجانية", image: "📚" },
+            { name: "جوجل", url: "https://www.google.com", description: "محرك البحث الأكثر شعبية", image: "🔍" },
+            
+            // مواقع التسوق
+            { name: "أمازون", url: "https://www.amazon.com", description: "أكبر متجر للتسوق عبر الإنترنت", image: "📦" },
+            
+            // مواقع الترفيه
+            { name: "نيتفليكس", url: "https://www.netflix.com", description: "خدمة البث التلفزيوني والأفلام", image: "🎬" },
+            
+            // مواقع المناقشات
+            { name: "ريديت", url: "https://www.reddit.com", description: "منصة المناقشات والمجتمعات", image: "📱" },
+            
+            // مواقع التوظيف
+            { name: "لينكد إن", url: "https://www.linkedin.com", description: "شبكة التواصل المهني", image: "💼" },
+            
+            // مواقع إضافية
+            { name: "أخبار التكنولوجيا", url: "https://techcrunch.com", description: "أحدث أخبار التكنولوجيا والشركات الناشئة", image: "📰" },
+            { name: "تعلم البرمجة", url: "https://freecodecamp.org", description: "تعلم البرمجة مجاناً", image: "💻" },
+            { name: "الموسوعة العربية", url: "https://arabcyclopedia.com", description: "موسوعة عربية شاملة", image: "📖" },
+            { name: "منصة التعليم", url: "https://coursera.org", description: "دورات تعليمية من أفضل الجامعات", image: "🎓" },
+            
+            // مواقع عربية إضافية
+            { name: "الجزيرة", url: "https://www.aljazeera.net", description: "شبكة أخبار عربية وعالمية", image: "📺" },
+            { name: "العربية", url: "https://www.alarabiya.net", description: "قناة إخبارية عربية", image: "🌍" },
+            { name: "مصراوي", url: "https://www.masrawy.com", description: "بوابة إخبارية مصرية", image: "🇪🇬" }
+        ];
+
+        // كلمات مشابهة للتصحيح الإملائي
+        const similarWords = {
+            "يوتيب": "يوتيوب",
+            "يوتيوب": "يوتيوب",
+            "فيس بوك": "فيسبوك",
+            "فيسبوك": "فيسبوك",
+            "تويتر": "تويتر",
+            "انستقرام": "انستغرام",
+            "انستجرام": "انستغرام",
+            "ويكيبيديا": "ويكيبيديا",
+            "ويكبيديا": "ويكيبيديا",
+            "جوجل": "جوجل",
+            "قوقل": "جوجل",
+            "امازون": "أمازون",
+            "أمازون": "أمازون",
+            "نتفلكس": "نيتفليكس",
+            "نيتفلكس": "نيتفليكس",
+            "ريدت": "ريديت",
+            "ريديت": "ريديت",
+            "لينكد ان": "لينكد إن",
+            "لينكدين": "لينكد إن",
+            "تكنولوجيا": "أخبار التكنولوجيا",
+            "تقنية": "أخبار التكنولوجيا",
+            "برمجة": "تعلم البرمجة",
+            "كود": "تعلم البرمجة",
+            "موسوعة": "الموسوعة العربية",
+            "تعليم": "منصة التعليم",
+            "دورات": "منصة التعليم",
+            "جزيرة": "الجزيرة",
+            "عربية": "العربية",
+            "مصري": "مصراوي",
+            "أخبار": "الجزيرة"
+        };
+
+        // عناصر DOM
+        const mainSearchInput = document.getElementById('main-search-input');
+        const topSearchInput = document.getElementById('top-search-input');
+        const searchSuggestions = document.getElementById('search-suggestions');
+        const searchResults = document.getElementById('search-results');
+        const browserWindow = document.getElementById('browser-window');
+        const browserContent = document.getElementById('browser-content');
+        const browserUrl = document.getElementById('browser-url');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const closeBrowserBtn = document.getElementById('close-browser');
+        const backBtn = document.getElementById('back-btn');
+        const forwardBtn = document.getElementById('forward-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const browserBackBtn = document.getElementById('browser-back');
+        const browserForwardBtn = document.getElementById('browser-forward');
+        const browserRefreshBtn = document.getElementById('browser-refresh');
+        const securityOptions = document.querySelectorAll('.security-option');
+
+        // تاريخ التصفح للأسهم الأمامية والخلفية
+        let browserHistory = [];
+        let currentHistoryIndex = -1;
+        let currentSafetyLevel = 'high';
+        let searchDelay = 300; // تأخير البحث الافتراضي
+
+        // وظيفة للعثور على أقرب كلمة
+        function findClosestWord(input) {
+            input = input.toLowerCase().trim();
+            
+            if (similarWords[input]) {
+                return similarWords[input];
+            }
+            
+            let closestMatch = null;
+            let minDistance = Infinity;
+            
+            sitesDatabase.forEach(site => {
+                const distance = levenshteinDistance(input, site.name.toLowerCase());
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestMatch = site.name;
+                }
+            });
+            
+            return minDistance <= 3 ? closestMatch : input;
+        }
+
+        // خوارزمية ليفنشتاين للمسافة بين الكلمات
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i-1) === a.charAt(j-1)) {
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i-1][j-1] + 1,
+                            matrix[i][j-1] + 1,
+                            matrix[i-1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[b.length][a.length];
+        }
+
+        // وظيفة لعرض الاقتراحات
+        function showSuggestions(input) {
+            searchSuggestions.innerHTML = '';
+            
+            if (input.length < 2) {
+                searchSuggestions.style.display = 'none';
+                return;
+            }
+            
+            const correctedWord = findClosestWord(input);
+            const suggestions = sitesDatabase.filter(site => 
+                site.name.toLowerCase().includes(input.toLowerCase()) ||
+                site.description.toLowerCase().includes(input.toLowerCase())
+            ).slice(0, 5);
+            
+            if (correctedWord !== input && !suggestions.some(s => s.name === correctedWord)) {
+                const suggestionElement = document.createElement('div');
+                suggestionElement.className = 'search-suggestion';
+                suggestionElement.textContent = `هل تقصد: ${correctedWord}`;
+                suggestionElement.addEventListener('click', () => {
+                    mainSearchInput.value = correctedWord;
+                    performSearch(correctedWord);
+                    searchSuggestions.style.display = 'none';
+                });
+                searchSuggestions.appendChild(suggestionElement);
+            }
+            
+            suggestions.forEach(site => {
+                const suggestionElement = document.createElement('div');
+                suggestionElement.className = 'search-suggestion';
+                suggestionElement.textContent = site.name;
+                suggestionElement.addEventListener('click', () => {
+                    mainSearchInput.value = site.name;
+                    performSearch(site.name);
+                    searchSuggestions.style.display = 'none';
+                });
+                searchSuggestions.appendChild(suggestionElement);
+            });
+            
+            searchSuggestions.style.display = suggestions.length > 0 ? 'block' : 'none';
+        }
+
+        // وظيفة تنفيذ البحث
+        function performSearch(query) {
+            // التحقق من وضع ملء الشاشة أولاً
+            if (!isFullscreen()) {
+                alert('يجب تفعيل وضع ملء الشاشة أولاً لاستخدام الموقع.');
+                toggleMainContent();
+                return;
+            }
+
+            // تطبيق تأخير البحث بناءً على مستوى الأمان
+            setTimeout(() => {
+                const correctedQuery = findClosestWord(query);
+                searchResults.innerHTML = '';
+                
+                const results = sitesDatabase.filter(site => 
+                    site.name.toLowerCase().includes(correctedQuery.toLowerCase()) ||
+                    site.description.toLowerCase().includes(correctedQuery.toLowerCase())
+                );
+                
+                if (results.length > 0) {
+                    results.forEach(site => {
+                        const resultElement = document.createElement('div');
+                        resultElement.className = 'search-result';
+                        resultElement.innerHTML = `
+                            <div class="result-image">${site.image}</div>
+                            <div class="result-details">
+                                <div class="result-title">${site.name}</div>
+                                <div class="result-description">${site.description}</div>
+                            </div>
+                        `;
+                        resultElement.addEventListener('click', () => {
+                            openSite(site.url, site.name);
+                        });
+                        searchResults.appendChild(resultElement);
+                    });
+                    searchResults.style.display = 'block';
+                } else {
+                    searchResults.innerHTML = '<div style="text-align: center; padding: 30px; font-size: 18px;">لم يتم العثور على نتائج لـ "' + correctedQuery + '"</div>';
+                    searchResults.style.display = 'block';
+                }
+                
+                topSearchInput.value = correctedQuery;
+            }, searchDelay);
+        }
+
+        // وظيفة فتح الموقع في المتصفح الداخلي
+        function openSite(url, title) {
+            // التحقق من وضع ملء الشاشة أولاً
+            if (!isFullscreen()) {
+                alert('يجب تفعيل وضع ملء الشاشة أولاً لاستخدام الموقع.');
+                toggleMainContent();
+                return;
+            }
+
+            browserContent.src = url;
+            browserUrl.textContent = url;
+            browserWindow.style.display = 'block';
+            
+            browserHistory.push({ url, title });
+            currentHistoryIndex = browserHistory.length - 1;
+            updateBrowserButtons();
+        }
+
+        // تحديث أزرار المتصفح
+        function updateBrowserButtons() {
+            browserBackBtn.disabled = currentHistoryIndex <= 0;
+            backBtn.disabled = currentHistoryIndex <= 0;
+            browserForwardBtn.disabled = currentHistoryIndex >= browserHistory.length - 1;
+            forwardBtn.disabled = currentHistoryIndex >= browserHistory.length - 1;
+        }
+
+        // تغيير مستوى الأمان
+        function changeSafetyLevel(level) {
+            document.body.className = `safety-${level}`;
+            currentSafetyLevel = level;
+            
+            securityOptions.forEach(option => {
+                if (option.dataset.level === level) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+            
+            // تحديث معلومات الأمان والموقع
+            updateSecurityInfo(level);
+            
+            // تطبيق إعدادات السرعة
+            searchDelay = applySpeedSettings(level);
+            
+            // إذا كان الأمان منخفضاً، عرض الموقع الحقيقي
+            if (level === 'low') {
+                showRealLocation();
+            }
+            
+            localStorage.setItem('safetyLevel', level);
+        }
+
+        // أحداث الإدخال للبحث الرئيسي
+        mainSearchInput.addEventListener('input', function() {
+            showSuggestions(this.value);
+        });
+
+        mainSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch(this.value);
+            }
+        });
+
+        // أحداث الإدخال للبحث العلوي
+        topSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch(this.value);
+            }
+        });
+
+        // أحداث الأزرار
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+
+        closeBrowserBtn.addEventListener('click', () => {
+            browserWindow.style.display = 'none';
+            browserContent.src = 'about:blank';
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                const historyItem = browserHistory[currentHistoryIndex];
+                browserContent.src = historyItem.url;
+                browserUrl.textContent = historyItem.url;
+                updateBrowserButtons();
+            }
+        });
+
+        forwardBtn.addEventListener('click', () => {
+            if (currentHistoryIndex < browserHistory.length - 1) {
+                currentHistoryIndex++;
+                const historyItem = browserHistory[currentHistoryIndex];
+                browserContent.src = historyItem.url;
+                browserUrl.textContent = historyItem.url;
+                updateBrowserButtons();
+            }
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            if (browserWindow.style.display === 'block') {
+                browserContent.src = browserContent.src;
+            } else {
+                searchResults.style.display = 'none';
+                mainSearchInput.value = '';
+                mainSearchInput.focus();
+                
+                // تحديث الدولة والرمز العشوائي عند التحديث
+                if (currentSafetyLevel !== 'low') {
+                    updateSecurityInfo(currentSafetyLevel);
+                }
+            }
+        });
+
+        browserBackBtn.addEventListener('click', () => {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                const historyItem = browserHistory[currentHistoryIndex];
+                browserContent.src = historyItem.url;
+                browserUrl.textContent = historyItem.url;
+                updateBrowserButtons();
+            }
+        });
+
+        browserForwardBtn.addEventListener('click', () => {
+            if (currentHistoryIndex < browserHistory.length - 1) {
+                currentHistoryIndex++;
+                const historyItem = browserHistory[currentHistoryIndex];
+                browserContent.src = historyItem.url;
+                browserUrl.textContent = historyItem.url;
+                updateBrowserButtons();
+            }
+        });
+
+        browserRefreshBtn.addEventListener('click', () => {
+            browserContent.src = browserContent.src;
+        });
+
+        // أحداث خيارات الأمان
+        securityOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                changeSafetyLevel(option.dataset.level);
+            });
+        });
+
+        // إغلاق النوافذ المنبثقة بالنقر خارجها
+        window.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+            if (e.target === protectionOverlay) {
+                protectionOverlay.style.display = 'none';
+            }
+        });
+
+        // إخفاء الاقتراحات عند النقر خارجها
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-box')) {
+                searchSuggestions.style.display = 'none';
+            }
+        });
+
+        // تحميل إعدادات الأمان المحفوظة
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedSafetyLevel = localStorage.getItem('safetyLevel') || 'high';
+            changeSafetyLevel(savedSafetyLevel);
+            
+            // بدء التحديثات العشوائية
+            startRandomUpdates();
+            
+            // تركيز حقل البحث فقط إذا كان وضع ملء الشاشة مفعلاً
+            if (isFullscreen()) {
+                mainSearchInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
